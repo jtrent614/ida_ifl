@@ -34,7 +34,7 @@ try:
 
   usingPySide = True
   """ 
-  I couldn't get the import of idaapi.PluginForm.FormToPySideModel to work (the only
+  I couldn't get the import of idaapi.PluginForm.FormToPySideWidget to work (the only
   remaining difference not handled by these imports) so I just created this variable 
   to handle it (used once on line 873)
   """
