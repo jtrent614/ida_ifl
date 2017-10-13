@@ -21,8 +21,29 @@ from idaapi import *
 from idc import *
 
 from idaapi import PluginForm
-from PyQt5 import QtGui, QtCore, QtWidgets
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+
+try:
+  """ Backwards compatability """
+  from PySide import QtGui
+  from PySide import QtGui as QtWidgets 
+  from PySide import QtCore
+  from PySide.QtCore import QObject
+  from PySide.QtCore import Signal as pyqtSignal
+  from PySide.QtCore import Slot as pyqtSlot
+  from PySide.QtGui import QSortFilterProxyModel
+
+  usingPySide = True
+  """ 
+  I couldn't get the import of idaapi.PluginForm.FormToPySideModel to work (the only
+  remaining difference not handled by these imports) so I just created this variable 
+  to handle it (used once on line 873)
+  """
+except:
+  from PyQt5 import QtGui, QtCore, QtWidgets
+  from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QSortFilterProxyModel
+  import sip
+
+  usingPySide = False
 
 # --------------------------------------------------------------------------
 # custom functions:
@@ -757,7 +778,7 @@ class FunctionsListForm_t(PluginForm):
         self.addr_list.append(func_info)
     
     def _setup_sorted_model(self, view, model):
-        sorted_model = QtCore.QSortFilterProxyModel()    
+        sorted_model = QSortFilterProxyModel()
         sorted_model.setDynamicSortFilter(True)
         sorted_model.setSourceModel(model)
         view.setModel(sorted_model)
@@ -854,14 +875,17 @@ class FunctionsListForm_t(PluginForm):
         self.criterium_id = 0
         
         # Get parent widget
-        self.parent = self.FormToPyQtWidget(form)
+        if usingPySide:
+          self.parent = self.FormToPySideWidget(form)
+        else:
+          self.parent = self.FormToPyQtWidget(form)
         
         # Create models
         self.table_model = TableModel_t(self.addr_list)
         self.subDataManager = DataManager()
         
-        #init
-        self.addr_sorted_model = QtCore.QSortFilterProxyModel()    
+        #init  
+        self.addr_sorted_model = QSortFilterProxyModel()
         self.addr_sorted_model.setDynamicSortFilter(True)
         self.addr_sorted_model.setSourceModel(self.table_model)
         self.addr_view = FunctionsView_t(g_DataManager, self._COLOR_HILIGHT_FUNC, self.table_model)
